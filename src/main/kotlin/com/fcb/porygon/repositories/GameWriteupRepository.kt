@@ -16,7 +16,7 @@ interface GameWriteupRepository : CrudRepository<GameWriteup?, Int?> {
               AND g.batter_on_third = :batterOnThird 
               AND g.runs_scored = :runsScored
         """,
-        nativeQuery = true
+        nativeQuery = true,
     )
     fun findByScenario(
         result: String,

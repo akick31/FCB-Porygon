@@ -45,7 +45,8 @@ open class Player {
         NEUTRAL("Neutral"),
         STRIKEOUT("Strikeout"),
         GROUND_BALL("Ground Ball"),
-        FLY_BALL("Fly Ball");
+        FLY_BALL("Fly Ball"),
+        ;
 
         companion object {
             fun fromDescription(description: String): Archetype {
@@ -63,7 +64,8 @@ open class Player {
         SHORTSTOP("Shortstop"),
         LEFT_FIELD("Left Field"),
         CENTER_FIELD("Center Field"),
-        RIGHT_FIELD("Right Field");
+        RIGHT_FIELD("Right Field"),
+        ;
 
         companion object {
             fun fromDescription(description: String): Position {
@@ -71,5 +73,4 @@ open class Player {
             }
         }
     }
-
 }

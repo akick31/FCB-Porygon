@@ -12,16 +12,15 @@ class GameWriteupService(
      * Get a game message by scenario
      * @param gameScenario
      */
-    fun getGameMessageByScenario(
-        gameScenario: GameScenario
-    ): String {
-        val writeups = gameWriteupRepository.findByScenario(
-            gameScenario.result.description,
-            gameScenario.batterOnFirst,
-            gameScenario.batterOnSecond,
-            gameScenario.batterOnThird,
-            gameScenario.runsScored
-        )
+    fun getGameMessageByScenario(gameScenario: GameScenario): String {
+        val writeups =
+            gameWriteupRepository.findByScenario(
+                gameScenario.result.description,
+                gameScenario.batterOnFirst,
+                gameScenario.batterOnSecond,
+                gameScenario.batterOnThird,
+                gameScenario.runsScored,
+            )
 
         return if (writeups.isNotEmpty()) {
             writeups.random().gameWriteup

@@ -11,5 +11,5 @@ data class GameScenario(
     val runsScored: Int,
     val inning: Int,
     val inningHalf: InningHalf,
-    val outs: Int
+    val outs: Int,
 )

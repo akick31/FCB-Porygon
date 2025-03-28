@@ -52,7 +52,7 @@ class Season {
         nationalChampionshipWinningCoach: String?,
         nationalChampionshipLosingCoach: String?,
         currentWeek: Int,
-        currentSeason: Boolean
+        currentSeason: Boolean,
     ) {
         this.seasonNumber = seasonNumber
         this.startDate = startDate

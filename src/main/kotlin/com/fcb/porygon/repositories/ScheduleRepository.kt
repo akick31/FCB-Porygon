@@ -55,7 +55,7 @@ interface ScheduleRepository : CrudRepository<Schedule?, Int?> {
         awayTeam: String,
         season: Int,
         week: Int,
-        gameNumber: Int
+        gameNumber: Int,
     ): Schedule?
 
     @Query(

@@ -282,11 +282,12 @@ class UserService(
             winPercentage = if (user.wins + user.losses > 0) (user.wins / (user.wins + user.losses)).toFloat() else 0.0F
             conferenceWins = user.conferenceWins
             conferenceLosses = user.conferenceLosses
-            conferenceWinPercentage = if (user.conferenceWins + user.conferenceLosses > 0) {
-                (user.conferenceWins / (user.conferenceWins + user.conferenceLosses).toFloat())
-            } else {
-                0.0F
-            }
+            conferenceWinPercentage =
+                if (user.conferenceWins + user.conferenceLosses > 0) {
+                    (user.conferenceWins / (user.conferenceWins + user.conferenceLosses).toFloat())
+                } else {
+                    0.0F
+                }
             seriesWins = user.seriesWins
             seriesLosses = user.seriesLosses
             seriesPushes = user.seriesPushes

@@ -40,7 +40,7 @@ class NewSignup {
     lateinit var email: String
 
     @Column(name = "hashed_email")
-    var hashedEmail: String ? = null
+    var hashedEmail: String? = null
 
     @Column(name = "password")
     lateinit var password: String
@@ -53,10 +53,10 @@ class NewSignup {
 
     @Column(name = "approved")
     var approved: Boolean = false
-    
+
     // Default constructor
     constructor()
-    
+
     // Constructor with parameters
     constructor(
         username: String,
@@ -71,7 +71,7 @@ class NewSignup {
         password: String,
         salt: String?,
         verificationToken: String?,
-        approved: Boolean
+        approved: Boolean,
     ) {
         this.username = username
         this.coachName = coachName

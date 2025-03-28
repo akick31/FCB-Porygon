@@ -294,9 +294,7 @@ class TeamService(
      * Fire all coaches for a team
      * @param name
      */
-    fun fireCoach(
-        name: String?,
-    ): Team {
+    fun fireCoach(name: String?): Team {
         val existingTeam = getTeamByName(name)
         val coachDiscordId = existingTeam.coachDiscordId ?: throw NoCoachDiscordIdFoundException()
         val user = userService.getUserDTOByDiscordId(coachDiscordId)

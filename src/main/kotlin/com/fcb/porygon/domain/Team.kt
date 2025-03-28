@@ -185,7 +185,7 @@ class Team {
         totalChampionships: Int,
         lastAcceptedLineup: List<Int>,
         taken: Boolean,
-        active: Boolean
+        active: Boolean,
     ) {
         this.name = name
         this.shortName = shortName

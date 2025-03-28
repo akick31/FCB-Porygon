@@ -31,7 +31,7 @@ class User {
     lateinit var email: String
 
     @Column(name = "hashed_email")
-    var hashedEmail: String ? = null
+    var hashedEmail: String? = null
 
     @Column(name = "password", nullable = false)
     lateinit var password: String
@@ -43,7 +43,7 @@ class User {
     lateinit var role: Role
 
     @Column(name = "salt", nullable = false)
-    var salt: String ? = null
+    var salt: String? = null
 
     @Column(name = "team")
     var team: String? = null
@@ -134,7 +134,7 @@ class User {
         championships: Int,
         averageResponseTime: Double,
         resetToken: String?,
-        resetTokenExpiration: String?
+        resetTokenExpiration: String?,
     ) {
         this.username = username
         this.coachName = coachName

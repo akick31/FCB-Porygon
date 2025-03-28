@@ -33,11 +33,12 @@ class NewSignupService(
         if (newSignup.email.isNullOrBlank()) {
             throw EmailNotFoundException("New signup email cannot be null or blank")
         }
-        val existingSignup = userRepository.getUserByEmail(
-            encryptionUtils.hash(
-                newSignup.email ?: throw EmailNotFoundException("New signup email cannot be null or blank")
+        val existingSignup =
+            userRepository.getUserByEmail(
+                encryptionUtils.hash(
+                    newSignup.email ?: throw EmailNotFoundException("New signup email cannot be null or blank"),
+                ),
             )
-        )
         if (existingSignup != null) {
             throw EmailNotFoundException("Email already exists")
         }
@@ -51,11 +52,13 @@ class NewSignupService(
                 newSignup.teamChoiceOne,
                 newSignup.teamChoiceTwo,
                 newSignup.teamChoiceThree,
-                encryptionUtils.encrypt(newSignup.email ?:
-                    throw EmailNotFoundException("New signup email cannot be null or blank")
+                encryptionUtils.encrypt(
+                    newSignup.email
+                        ?: throw EmailNotFoundException("New signup email cannot be null or blank"),
                 ),
-                encryptionUtils.hash(newSignup.email ?:
-                    throw EmailNotFoundException("New signup email cannot be null or blank")
+                encryptionUtils.hash(
+                    newSignup.email
+                        ?: throw EmailNotFoundException("New signup email cannot be null or blank"),
                 ),
                 passwordEncoder.encode(newSignup.password),
                 salt,

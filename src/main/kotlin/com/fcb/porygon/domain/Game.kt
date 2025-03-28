@@ -203,7 +203,7 @@ class Game {
         closeGamePinged: Boolean? = false,
         upsetAlert: Boolean? = false,
         upsetAlertPinged: Boolean? = false,
-        gameStatus: GameStatus
+        gameStatus: GameStatus,
     ) {
         this.gameThreadId = gameThreadId
         this.requestMessageId = requestMessageId
