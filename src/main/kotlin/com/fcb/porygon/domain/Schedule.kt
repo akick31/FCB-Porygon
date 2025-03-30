@@ -1,5 +1,7 @@
 package com.fcb.porygon.domain
 
+import com.fcb.porygon.domain.Game.GameType
+import com.fcb.porygon.domain.Game.Subdivision
 import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
@@ -9,36 +11,36 @@ import javax.persistence.Table
 
 @Entity
 @Table(name = "schedule", schema = "porygon")
-open class Schedule {
+class Schedule {
     @Id
     @GeneratedValue(strategy = IDENTITY)
     @Column(name = "id", nullable = false)
-    open var id: Int? = null
+    var id: Int? = null
 
     @Column(name = "season", nullable = false)
-    open var season: Int? = null
+    var season: Int? = 0
 
     @Column(name = "week", nullable = false)
-    open var week: Int? = null
+    var week: Int? = 0
 
     @Column(name = "game_number", nullable = false)
-    open var gameNumber: Int? = null
+    var gameNumber: Int? = 1
 
     @Column(name = "subdivision", nullable = false)
-    open var subdivision: String? = null
+    lateinit var subdivision: Subdivision
 
     @Column(name = "home_team", nullable = false)
-    open var homeTeam: String? = null
+    lateinit var homeTeam: String
 
     @Column(name = "away_team", nullable = false)
-    open var awayTeam: String? = null
+    lateinit var awayTeam: String
 
     @Column(name = "game_type", nullable = false)
-    open var gameType: String? = null
+    lateinit var gameType: GameType
 
     @Column(name = "started", nullable = false)
-    open var started: Boolean? = false
+    var started: Boolean? = false
 
     @Column(name = "finished")
-    open var finished: Boolean? = false
+    var finished: Boolean? = false
 }

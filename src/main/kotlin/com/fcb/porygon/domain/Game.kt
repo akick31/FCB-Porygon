@@ -26,7 +26,7 @@ class Game {
     var requestMessageId: String? = null
 
     @Column(name = "subdivision")
-    var subdivision: String? = null
+    var subdivision: Subdivision? = null
 
     @Column(name = "season")
     var season: Int? = null
@@ -104,10 +104,10 @@ class Game {
     var runnerOnThird: Int? = null
 
     @Column(name = "home_batter_lineup_spot")
-    var homeBatterLineupSpot: Int? = null
+    var homeBatterLineupSpot: Int? = 1
 
     @Column(name = "away_batter_lineup_spot")
-    var awayBatterLineupSpot: Int? = null
+    var awayBatterLineupSpot: Int? = 1
 
     @Column(name = "batter_name")
     var batterName: String? = null
@@ -161,7 +161,7 @@ class Game {
     constructor(
         gameThreadId: String?,
         requestMessageId: String?,
-        subdivision: String?,
+        subdivision: Subdivision?,
         season: Int?,
         week: Int?,
         seriesGameNumber: Int,
@@ -315,6 +315,7 @@ class Game {
         DOUBLE("Double"),
         TRIPLE("Triple"),
         HOME_RUN("Home Run"),
+        DELAY_OF_GAME("Delay of Game"),
         ;
 
         companion object {

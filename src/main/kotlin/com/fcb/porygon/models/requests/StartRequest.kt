@@ -9,4 +9,5 @@ data class StartRequest(
     @JsonProperty("homeTeam") val homeTeam: String,
     @JsonProperty("awayTeam") val awayTeam: String,
     @JsonProperty("gameType") val gameType: GameType,
+    @JsonProperty("seriesGameNumber") val seriesGameNumber: Int,
 )

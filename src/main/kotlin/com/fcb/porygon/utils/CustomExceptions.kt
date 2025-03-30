@@ -84,9 +84,9 @@ class CurrentWeekNotFoundException : Exception("Current week not found") {
     }
 }
 
-class NoCoachesFoundException : Exception("No coaches found") {
+class NoCoachFoundException : Exception("No coach found") {
     override fun toString(): String {
-        return "NoCoachesFoundException: ${super.message}"
+        return "NoCoachFoundException: ${super.message}"
     }
 }
 

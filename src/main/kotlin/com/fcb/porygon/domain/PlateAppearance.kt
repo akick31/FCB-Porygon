@@ -81,7 +81,7 @@ class PlateAppearance {
     var runnerOnThird: Int? = null
 
     @Column(name = "runs_scored")
-    var runsScored: Int? = null
+    var runsScored: Int = 0
 
     @Column(name = "runner_on_first_after")
     var runnerOnFirstAfter: Int? = null
