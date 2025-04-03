@@ -17,7 +17,7 @@ class Game {
     @Id
     @GeneratedValue(strategy = IDENTITY)
     @Column(name = "game_id", nullable = false)
-    var id: Int? = null
+    var id: Int = 0
 
     @Column(name = "game_thread_id")
     var gameThreadId: String? = null
@@ -104,10 +104,10 @@ class Game {
     var runnerOnThird: Int? = null
 
     @Column(name = "home_batter_lineup_spot")
-    var homeBatterLineupSpot: Int? = 1
+    var homeBatterLineupSpot: Int = 1
 
     @Column(name = "away_batter_lineup_spot")
-    var awayBatterLineupSpot: Int? = 1
+    var awayBatterLineupSpot: Int = 1
 
     @Column(name = "batter_name")
     var batterName: String? = null
@@ -122,7 +122,7 @@ class Game {
     var pitcherUniformNumber: Int? = null
 
     @Column(name = "num_plate_appearance")
-    var numPlateAppearance: Int? = 1
+    var numPlateAppearance: Int = 1
 
     @Column(name = "current_plate_appearance_id")
     var currentPlateAppearanceId: Int? = null
@@ -172,8 +172,8 @@ class Game {
         homeLosses: Int,
         awayWins: Int,
         awayLosses: Int,
-        homeTeamRank: Int,
-        awayTeamRank: Int,
+        homeTeamRank: Int?,
+        awayTeamRank: Int?,
         homeCoach: String,
         awayCoach: String,
         homeCoachDiscordId: String,
@@ -187,13 +187,13 @@ class Game {
         runnerOnFirst: Int?,
         runnerOnSecond: Int?,
         runnerOnThird: Int?,
-        homeBatterLineupSpot: Int?,
-        awayBatterLineupSpot: Int?,
+        homeBatterLineupSpot: Int,
+        awayBatterLineupSpot: Int,
         batterName: String?,
         batterUniformNumber: Int?,
         pitcherName: String?,
         pitcherUniformNumber: Int?,
-        numPlateAppearance: Int? = 1,
+        numPlateAppearance: Int,
         currentPlateAppearanceId: Int?,
         gameWarned: Boolean? = false,
         gameTimer: String?,
@@ -289,7 +289,8 @@ class Game {
         STRIKEOUT("Strikeout"),
         WALK("Walk"),
         FLYOUT("Flyout"),
-        GROUNDOUT("Groundout"),
+        LEFT_GROUNDOUT("Left Groundout"),
+        RIGHT_GROUNDOUT("Right Groundout"),
         SINGLE("Single"),
         DOUBLE("Double"),
         TRIPLE("Triple"),
@@ -306,9 +307,9 @@ class Game {
     enum class ActualResult(val description: String) {
         STRIKEOUT("Strikeout"),
         WALK("Walk"),
-        FLY_OUT("Fly out"),
+        FLYOUT("Fly out"),
         SACRIFICE_FLY("Sacrifice Fly"),
-        GROUND_OUT("Ground out"),
+        GROUNDOUT("Ground out"),
         DOUBLE_PLAY("Double Play"),
         FIELDERS_CHOICE("Fielder's Choice"),
         SINGLE("Single"),
@@ -340,6 +341,17 @@ class Game {
     enum class TeamSide(val description: String) {
         HOME("home"),
         AWAY("away"),
+    }
+
+    enum class BaseCondition(val description: String) {
+        EMPTY("Empty"),
+        FIRST("First"),
+        SECOND("Second"),
+        THIRD("Third"),
+        FIRST_SECOND("First and Second"),
+        FIRST_THIRD("First and Third"),
+        SECOND_THIRD("Second and Third"),
+        BASED_LOADED("Based loaded"),
     }
 
     enum class GameType(val description: String) {

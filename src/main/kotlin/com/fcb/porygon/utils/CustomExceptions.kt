@@ -102,9 +102,9 @@ class TooManyCoachesException : Exception("Attempting to add too many coaches to
     }
 }
 
-class DefensiveNumberNotFound : Exception("Defensive number not found") {
+class PitcherNumberSubmissionNotFound : Exception("Pitcher number not found") {
     override fun toString(): String {
-        return "DefensiveNumberNotFound: ${super.message}"
+        return "PitcherNumberSubmissionNotFound: ${super.message}"
     }
 }
 
@@ -126,9 +126,9 @@ class GameStatsNotFoundException(message: String) : Exception(message) {
     }
 }
 
-class PlayNotFoundException(message: String) : Exception(message) {
+class PlateAppearanceNotFoundException(message: String) : Exception(message) {
     override fun toString(): String {
-        return "PlayNotFoundException: ${super.message}"
+        return "PlateAppearanceNotFoundException: ${super.message}"
     }
 }
 

@@ -1,6 +1,8 @@
 package com.fcb.porygon.domain
 
+import com.fcb.porygon.domain.Game.Scenario
 import com.fcb.porygon.domain.PlateAppearance.SubmissionType
+import com.fcb.porygon.domain.Player.Archetype
 import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
@@ -17,16 +19,16 @@ open class Ranges {
     open var id: Int? = null
 
     @Column(name = "batter_archetype")
-    open var batterArchetype: String? = null
+    open var batterArchetype: Archetype? = null
 
     @Column(name = "pitcher_archetype")
-    open var pitcherArchetype: String? = null
+    open var pitcherArchetype: Archetype? = null
 
     @Column(name = "submission_type")
     open var submissionType: SubmissionType? = null
 
     @Column(name = "result")
-    open var result: String? = null
+    open var result: Scenario? = null
 
     @Column(name = "low_range")
     open var lowRange: Int? = null

@@ -13,7 +13,7 @@ class Season {
     @Id
     @GeneratedValue(strategy = IDENTITY)
     @Column(name = "season_number", nullable = false)
-    var seasonNumber: Int? = null
+    var seasonNumber: Int = 1
 
     @Column(name = "start_date")
     lateinit var startDate: String
@@ -44,7 +44,7 @@ class Season {
 
     // Constructor with parameters
     constructor(
-        seasonNumber: Int?,
+        seasonNumber: Int,
         startDate: String,
         endDate: String?,
         nationalChampionshipWinningTeam: String?,

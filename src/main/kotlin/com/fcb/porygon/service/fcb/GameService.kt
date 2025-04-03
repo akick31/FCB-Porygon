@@ -2,18 +2,28 @@ package com.fcb.porygon.service.fcb
 
 import com.fcb.porygon.domain.Game
 import com.fcb.porygon.domain.Game.ActualResult
+import com.fcb.porygon.domain.Game.BaseCondition
 import com.fcb.porygon.domain.Game.GameStatus
 import com.fcb.porygon.domain.Game.GameType
 import com.fcb.porygon.domain.Game.InningHalf
+import com.fcb.porygon.domain.Game.InningHalf.BOTTOM
 import com.fcb.porygon.domain.Game.InningHalf.TOP
+import com.fcb.porygon.domain.Game.Scenario
 import com.fcb.porygon.domain.Game.Subdivision
 import com.fcb.porygon.domain.Game.TeamSide
 import com.fcb.porygon.domain.PlateAppearance
+import com.fcb.porygon.domain.PlateAppearance.SubmissionType
+import com.fcb.porygon.domain.Player
 import com.fcb.porygon.domain.Team
 import com.fcb.porygon.domain.User
+import com.fcb.porygon.models.game.PlateAppearanceOutcome
 import com.fcb.porygon.models.requests.StartRequest
 import com.fcb.porygon.repositories.GameRepository
+import com.fcb.porygon.repositories.PlateAppearanceRepository
 import com.fcb.porygon.service.discord.DiscordService
+import com.fcb.porygon.service.fcb.GameSpecificationService.GameCategory
+import com.fcb.porygon.service.fcb.GameSpecificationService.GameFilter
+import com.fcb.porygon.service.fcb.GameSpecificationService.GameSort
 import com.fcb.porygon.service.fcfb.ScheduleService
 import com.fcb.porygon.service.fcfb.SeasonService
 import com.fcb.porygon.service.fcfb.TeamService
@@ -53,11 +63,6 @@ class GameService(
     private val scheduleService: ScheduleService,
     private val gameSpecificationService: GameSpecificationService,
 ) {
-    /**
-     * Save a game state
-     */
-    fun saveGame(game: Game): Game = gameRepository.save(game)
-
     suspend fun startSingleGame(
         startRequest: StartRequest,
         week: Int?,
@@ -108,7 +113,7 @@ class GameService(
 
             // Create and save the Game object and Stats object
             val newGame =
-                gameRepository.save(
+                saveGame(
                     Game(
                         gameThreadId = null,
                         requestMessageId = null,
@@ -148,8 +153,8 @@ class GameService(
                         currentPlateAppearanceId = null,
                         gameWarned = false,
                         gameTimer = formattedDateTime,
-                        timestamp = Timestamp.from(Instant.now()).toString(),
-                        lastMessageTimestamp = Timestamp.from(Instant.now()).toString(),
+                        timestamp = Instant.now(),
+                        lastMessageTimestamp = Instant.now(),
                         closeGame = false,
                         closeGamePinged = false,
                         upsetAlert = false,
@@ -178,10 +183,10 @@ class GameService(
             }
 
             newGame.gameThreadId = discordData[0]
-            newGame.requestMessageId = listOf(discordData[1])
+            newGame.requestMessageId = discordData[1]
 
             // Save the updated entity and create game stats
-            gameRepository.save(newGame)
+            saveGame(newGame)
             gameStatsService.createGameStats(newGame)
 
             Logger.info("Game started: ${newGame.homeTeam} vs ${newGame.awayTeam}")
@@ -195,47 +200,52 @@ class GameService(
     /**
      * Update game information based on the result of a play
      * @param game
-     * @param plateAppearance
-     * @param homeScore
-     * @param awayScore
-     * @param runnerOnFirst
-     * @param runnerOnSecond
-     * @param runnerOnThird
-     * @param outs
+     * @param outcome
      */
-    fun updateGameInformation(
+    fun updateGameValues(
         game: Game,
-        plateAppearance: PlateAppearance,
-        homeScore: Int,
-        awayScore: Int,
-        runnerOnFirst: Int,
-        runnerOnSecond: Int,
-        runnerOnThird: Int,
-        inning: Int,
-        inningHalf: InningHalf,
-        outs: Int
+        outcome: PlateAppearanceOutcome
     ): Game {
-        val waitingOn = updateWaitingOn(inningHalf)
-        updateCloseGame(game)
-        updateUpsetAlert(game)
-
-        // Update the quarter/overtime stuff
-        if (inning == 0) {
-            game.gameStatus = GameStatus.FINAL
-        } else if (game.gameStatus == GameStatus.PREGAME) {
-            game.gameStatus = GameStatus.IN_PROGRESS
+        // Before updating innings, update the current lineup spot
+        if (game.inningHalf == TOP) {
+            game.awayBatterLineupSpot = if (game.awayBatterLineupSpot == 9) 1 else game.awayBatterLineupSpot + 1
         } else {
-            game.waitingOn = waitingOn
+            game.homeBatterLineupSpot = if (game.homeBatterLineupSpot == 9) 1 else game.homeBatterLineupSpot + 1
+        }
+        if (outcome.outs > 3) {
+            val inningHalf = if (game.inningHalf == TOP) BOTTOM else TOP
+            val inning = game.inning + if (inningHalf == TOP) 1 else 0
+
+            // Check after every inning in the 9th or later if over
+            if (inning > 9 && inningHalf == TOP) {
+                if (outcome.homeScore > outcome.awayScore || outcome.awayScore > outcome.homeScore) {
+                    game.gameStatus = GameStatus.FINAL
+                } else {
+                    game.gameStatus = GameStatus.EXTRA_INNINGS
+                }
+            }
+
+            game.inning = inning
+            game.inningHalf = inningHalf
+            game.outs = 0
+            game.runnerOnFirst = null
+            game.runnerOnSecond = null
+            game.runnerOnThird = null
         }
 
-        // Update everything else
-        game.homeScore = homeScore
-        game.awayScore = awayScore
-        game.numPlateAppearance = plateAppearance.pitchNumber
-        game.gameTimer = calculateDelayOfGameTimer()
+        updateWaitingOn(game)
+        updateBattersAndPitchers(game)
+        game.homeScore = outcome.homeScore
+        game.awayScore = outcome.awayScore
+        game.outs = outcome.outs
+        game.runnerOnFirst = outcome.runnerOnFirstAfter?.uniformNumber
+        game.runnerOnSecond = outcome.runnerOnSecondAfter?.uniformNumber
+        game.runnerOnThird = outcome.runnerOnThirdAfter?.uniformNumber
+        game.numPlateAppearance += 1
         game.gameWarned = false
-
-        gameRepository.save(game)
+        game.gameTimer = calculateDelayOfGameTimer()
+        updateCloseGame(game)
+        updateUpsetAlert(game)
 
         if (game.gameStatus == GameStatus.FINAL) {
             endGame(game)
@@ -257,6 +267,121 @@ class GameService(
         game.waitingOn = if (game.inningHalf == TOP) TeamSide.AWAY else TeamSide.HOME
         game.gameTimer = calculateDelayOfGameTimer()
         gameRepository.save(game)
+    }
+
+    /**
+     * Update the game's batters and pitchers
+     * @param game
+     */
+    private fun updateBattersAndPitchers(game: Game) {
+        val (batter, pitcher) = if (game.inningHalf == TOP) {
+            lineupService.getBatterByLineupSpot(
+                game.id,
+                game.awayBatterLineupSpot,
+                game.awayTeam,
+            )
+            lineupService.getPitcherByTeam(
+                game.id,
+                game.homeTeam
+            )
+        } else {
+            lineupService.getBatterByLineupSpot(
+                game.id,
+                game.homeBatterLineupSpot,
+                game.homeTeam,
+            )
+            lineupService.getPitcherByTeam(
+                game.id,
+                game.awayTeam
+            )
+        }
+        game.batterName = batter.name
+        game.batterUniformNumber = batter.uniformNumber
+        game.pitcherName = pitcher.name
+        game.pitcherUniformNumber = pitcher.uniformNumber
+    }
+
+    /**
+     * Update the request message id
+     * @param id
+     * @param requestMessageId
+     */
+    fun updateRequestMessageId(
+        id: Int,
+        requestMessageId: String,
+    ) {
+        val game = getGameById(id)
+        game.requestMessageId = requestMessageId
+        saveGame(game)
+    }
+
+    /**
+     * Update the last message timestamp
+     * @param id
+     */
+    fun updateLastMessageTimestamp(id: Int) {
+        val game = getGameById(id)
+        val timestamp = Instant.now()
+        game.lastMessageTimestamp = timestamp
+        saveGame(game)
+    }
+
+    /**
+     * Update the team the game is waiting on
+     * @param game
+     */
+    private fun updateWaitingOn(
+        game: Game,
+    ) {
+        if (game.inningHalf == TOP) {
+            game.waitingOn = TeamSide.HOME
+        } else {
+            game.waitingOn = TeamSide.AWAY
+        }
+    }
+
+    /**
+     * Determines if the game is close
+     * @param game the game
+     */
+    private fun updateCloseGame(
+        game: Game,
+    ) {
+        game.closeGame = abs(game.homeScore - game.awayScore) <= 8 &&
+                game.inning >= 8
+    }
+
+    /**
+     * Determine if there is an upset alert. A game is an upset alert
+     * if at least one of the teams is ranked and the game is close
+     * @param game the game
+     */
+    private fun updateUpsetAlert(
+        game: Game,
+    ) {
+        val homeTeam = teamService.getTeamByName(game.homeTeam)
+        val awayTeam = teamService.getTeamByName(game.awayTeam)
+
+        val homeTeamRanking = homeTeam.ranking ?: 100
+        val awayTeamRanking = awayTeam.ranking ?: 100
+
+        if ((
+                    (game.homeScore <= game.awayScore && homeTeamRanking < awayTeamRanking) ||
+                            (game.awayScore <= game.homeScore && awayTeamRanking < homeTeamRanking)
+                    ) &&
+            game.inning >= 8
+        ) {
+            game.upsetAlert = true
+        }
+        if ((
+                    (abs(game.homeScore - game.awayScore) <= 8 && homeTeamRanking < awayTeamRanking) ||
+                            (abs(game.awayScore - game.homeScore) <= 8 && awayTeamRanking < homeTeamRanking)
+                    ) &&
+            game.inning >= 8
+        ) {
+            game.upsetAlert = true
+        }
+        game.upsetAlert = false
     }
 
     /**
@@ -300,15 +425,22 @@ class GameService(
                 plateAppearanceRepository.getCurrentPlateAppearance(game.id)
                     ?: plateAppearanceRepository.getPreviousPlateAppearance(game.id)
                     ?: previousPlateAppearance
+
             game.currentPlateAppearanceId = newCurrentPlateAppearanec.id
-            game.inning = previousPlateAppearance.inning!!
-            game.outs = previousPlateAppearance.outs!!
-            game.inningHalf = previousPlateAppearance.inningHalf!!
+            game.inning = previousPlateAppearance.inning
+            game.outs = previousPlateAppearance.outs
+            game.inningHalf = previousPlateAppearance.inningHalf
             game.runnerOnFirst = previousPlateAppearance.runnerOnFirst
             game.runnerOnSecond = previousPlateAppearance.runnerOnSecond
             game.runnerOnThird = previousPlateAppearance.runnerOnThird
             game.waitingOn = if (previousPlateAppearance.inningHalf == TOP) TeamSide.HOME else TeamSide.AWAY
             game.gameTimer = calculateDelayOfGameTimer()
+            if (game.inningHalf == TOP) {
+                game.awayBatterLineupSpot = if (game.awayBatterLineupSpot == 1) 9 else game.awayBatterLineupSpot - 1
+            } else {
+                game.homeBatterLineupSpot = if (game.homeBatterLineupSpot == 1) 9 else game.homeBatterLineupSpot - 1
+            }
+            updateBattersAndPitchers(game)
             gameStatsService.generateGameStats(game.id)
             saveGame(game)
         } catch (e: Exception) {
@@ -441,7 +573,7 @@ class GameService(
 
             // Update the game stats one last time
             gameStatsService.deleteByid(game.id)
-            val allPlays = plateAppearanceRepository.getAllPlateAppearancesById(game.id)
+            val allPlays = plateAppearanceRepository.getAllPlateAppearancesByGameId(game.id)
             for (play in allPlays) {
                 gameStatsService.updateGameStats(
                     game,
@@ -492,7 +624,7 @@ class GameService(
         val gameId = game.id
         gameRepository.deleteById(gameId)
         gameStatsService.deleteByid(gameId)
-        plateAppearanceRepository.deleteAllPlateAppearancesById(gameId)
+        plateAppearanceRepository.deleteAllPlateAppearancesByGameId(gameId)
         Logger.info("Game $gameId deleted")
         return true
     }
@@ -513,42 +645,6 @@ class GameService(
 
         // Format the result and set it on the game
         return futureTime.format(formatter)
-    }
-
-    /**
-     * Update the request message id
-     * @param id
-     * @param requestMessageId
-     */
-    fun updateRequestMessageId(
-        id: Int,
-        requestMessageId: String,
-    ) {
-        val game = getGameById(id)
-        game.requestMessageId = requestMessageId
-        saveGame(game)
-    }
-
-    /**
-     * Update the last message timestamp
-     * @param id
-     */
-    fun updateLastMessageTimestamp(id: Int) {
-        val game = getGameById(id)
-        val timestamp = Instant.now()
-        game.lastMessageTimestamp = timestamp
-        saveGame(game)
-    }
-
-    /**
-     * Update the team the game is waiting on
-     */
-    private fun updateWaitingOn(inningHalf: InningHalf): TeamSide {
-        return if (inningHalf == TOP) {
-            TeamSide.HOME
-        } else {
-            TeamSide.AWAY
-        }
     }
 
     /**
@@ -718,64 +814,51 @@ class GameService(
     }
 
     /**
-     * Determines if the game is close
-     * @param game the game
-     */
-    private fun updateCloseGame(
-        game: Game,
-    ) {
-        game.closeGame = abs(game.homeScore - game.awayScore) <= 8 &&
-            game.inning >= 8
-    }
-
-    /**
-     * Determine if there is an upset alert. A game is an upset alert
-     * if at least one of the teams is ranked and the game is close
-     * @param game the game
-     * @param play the play
-     */
-    private fun updateUpsetAlert(
-        game: Game,
-    ) {
-        val homeTeam = teamService.getTeamByName(game.homeTeam)
-        val awayTeam = teamService.getTeamByName(game.awayTeam)
-
-        val homeTeamRanking = homeTeam.ranking ?: 100
-        val awayTeamRanking = awayTeam.ranking ?: 100
-
-        if ((
-                (game.homeScore <= game.awayScore && homeTeamRanking < awayTeamRanking) ||
-                    (game.awayScore <= game.homeScore && awayTeamRanking < homeTeamRanking)
-            ) &&
-            game.inning >= 8
-        ) {
-            game.upsetAlert = true
-        }
-        if ((
-                (abs(game.homeScore - game.awayScore) <= 8 && homeTeamRanking < awayTeamRanking) ||
-                    (abs(game.awayScore - game.homeScore) <= 8 && awayTeamRanking < homeTeamRanking)
-            ) &&
-            game.inning >= 8
-        ) {
-            game.upsetAlert = true
-        }
-        game.upsetAlert = false
-    }
-
-    /**
-     * Returns the difference between the offensive and defensive numbers.
-     * @param offensiveNumber
-     * @param defesiveNumber
+     * Returns the difference between the batter and pitcher numbers.
+     * @param batterNumber
+     * @param pitcherNumber
      * @return
      */
     fun getDifference(
-        offensiveNumber: Int,
-        defesiveNumber: Int,
+        batterNumber: Int,
+        pitcherNumber: Int,
     ): Int {
-        var difference = abs(defesiveNumber - offensiveNumber)
-        if (difference > 750) {
-            difference = 1500 - difference
+        var difference = abs(pitcherNumber - batterNumber)
+        if (difference > 500) {
+            difference = 1000 - difference
         }
         return difference
     }
+
+    /**
+     * Get the base condition based on the runners on base
+     * @param runnerOnFirst
+     * @param runnerOnSecond
+     * @param runnerOnThird
+     * @return
+     */
+    fun getBaseCondition(
+        runnerOnFirst: Player?,
+        runnerOnSecond: Player?,
+        runnerOnThird: Player?,
+    ): BaseCondition {
+        return when {
+            runnerOnFirst != null && runnerOnSecond != null && runnerOnThird != null -> BaseCondition.BASED_LOADED
+            runnerOnFirst != null && runnerOnSecond != null -> BaseCondition.FIRST_SECOND
+            runnerOnFirst != null && runnerOnThird != null -> BaseCondition.FIRST_THIRD
+            runnerOnSecond != null && runnerOnThird != null -> BaseCondition.SECOND_THIRD
+            runnerOnFirst != null -> BaseCondition.FIRST
+            runnerOnSecond != null -> BaseCondition.SECOND
+            runnerOnThird != null -> BaseCondition.THIRD
+            else -> BaseCondition.EMPTY
+        }
+    }
+
+    /**
+     * Save a game
+     * @param game
+     * @return
+     */
+    fun saveGame(game: Game) = gameRepository.save(game)
+        ?: throw GameNotFoundException("Unable to save game: ${game.id} - ${game.homeTeam} vs ${game.awayTeam}")
 }

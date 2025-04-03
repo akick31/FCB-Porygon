@@ -15,31 +15,34 @@ class PlateAppearance {
     @Id
     @GeneratedValue(strategy = IDENTITY)
     @Column(name = "plate_appearance_id", nullable = false)
-    var id: Int? = null
+    var id: Int = 0
+
+    @Column(name = "game_id")
+    var gameId: Int = 0
 
     @Column(name = "pitch_number")
-    var pitchNumber: Int? = null
+    var pitchNumber: Int = 1
 
     @Column(name = "home_team")
-    var homeTeam: String? = null
+    lateinit var homeTeam: String
 
     @Column(name = "away_team")
-    var awayTeam: String? = null
+    lateinit var awayTeam: String
 
     @Column(name = "home_score")
-    var homeScore: Int? = null
+    var homeScore: Int = 0
 
     @Column(name = "away_score")
-    var awayScore: Int? = null
+    var awayScore: Int = 0
 
     @Column(name = "inning_half")
-    var inningHalf: Game.InningHalf? = null
+    var inningHalf: Game.InningHalf = Game.InningHalf.TOP
 
     @Column(name = "inning")
-    var inning: Int? = null
+    var inning: Int = 1
 
     @Column(name = "outs")
-    var outs: Int? = null
+    var outs: Int = 0
 
     @Column(name = "pitching_team")
     var pitchingTeam: String? = null
@@ -93,7 +96,7 @@ class PlateAppearance {
     var runnerOnThirdAfter: Int? = null
 
     @Column(name = "lineup_spot")
-    var lineupSpot: Int? = null
+    var lineupSpot: Int = 1
 
     @Column(name = "batter_name")
     var batterName: String? = null
@@ -108,10 +111,10 @@ class PlateAppearance {
     var pitcherUniformNumber: Int? = null
 
     @Column(name = "win_probability")
-    var winProbability: Float? = null
+    var winProbability: Float = 0.0F
 
     @Column(name = "win_probability_added")
-    var winProbabilityAdded: Float? = null
+    var winProbabilityAdded: Float = 0.0F
 
     @Column(name = "batter_response_speed")
     var batterResponseSpeed: Long? = null
@@ -120,7 +123,87 @@ class PlateAppearance {
     var pitcherResponseSpeed: Long? = null
 
     @Column(name = "plate_appearance_finished")
-    var plateAppearanceFinished: Boolean? = false
+    var plateAppearanceFinished: Boolean = false
+
+    // Default constructor
+    constructor()
+
+    // Constructor with parameters
+    constructor(
+        gameId: Int,
+        pitchNumber: Int,
+        homeTeam: String,
+        awayTeam: String,
+        homeScore: Int,
+        awayScore: Int,
+        inningHalf: Game.InningHalf,
+        inning: Int,
+        outs: Int,
+        pitchingTeam: String?,
+        battingTeam: String?,
+        pitcherSubmitter: String?,
+        batterSubmitter: String?,
+        batterNumberSubmission: String?,
+        pitcherNumberSubmission: String?,
+        difference: Int?,
+        submissionType: SubmissionType?,
+        result: Scenario?,
+        actualResult: ActualResult?,
+        runnerOnFirst: Int?,
+        runnerOnSecond: Int?,
+        runnerOnThird: Int?,
+        runsScored: Int,
+        runnerOnFirstAfter: Int?,
+        runnerOnSecondAfter: Int?,
+        runnerOnThirdAfter: Int?,
+        lineupSpot: Int,
+        batterName: String?,
+        batterUniformNumber: Int?,
+        pitcherName: String?,
+        pitcherUniformNumber: Int?,
+        winProbability: Float,
+        winProbabilityAdded: Float,
+        batterResponseSpeed: Long?,
+        pitcherResponseSpeed: Long?,
+        plateAppearanceFinished: Boolean,
+    ) {
+        this.gameId = gameId
+        this.pitchNumber = pitchNumber
+        this.homeTeam = homeTeam
+        this.awayTeam = awayTeam
+        this.homeScore = homeScore
+        this.awayScore = awayScore
+        this.inningHalf = inningHalf
+        this.inning = inning
+        this.outs = outs
+        this.pitchingTeam = pitchingTeam
+        this.battingTeam = battingTeam
+        this.pitcherSubmitter = pitcherSubmitter
+        this.batterSubmitter = batterSubmitter
+        this.batterNumberSubmission = batterNumberSubmission
+        this.pitcherNumberSubmission = pitcherNumberSubmission
+        this.difference = difference
+        this.submissionType = submissionType
+        this.result = result
+        this.actualResult = actualResult
+        this.runnerOnFirst = runnerOnFirst
+        this.runnerOnSecond = runnerOnSecond
+        this.runnerOnThird = runnerOnThird
+        this.runsScored = runsScored
+        this.runnerOnFirstAfter = runnerOnFirstAfter
+        this.runnerOnSecondAfter = runnerOnSecondAfter
+        this.runnerOnThirdAfter = runnerOnThirdAfter
+        this.lineupSpot = lineupSpot
+        this.batterName = batterName
+        this.batterUniformNumber = batterUniformNumber
+        this.pitcherName = pitcherName
+        this.pitcherUniformNumber = pitcherUniformNumber
+        this.winProbability = winProbability
+        this.winProbabilityAdded = winProbabilityAdded
+        this.batterResponseSpeed = batterResponseSpeed
+        this.pitcherResponseSpeed = pitcherResponseSpeed
+        this.plateAppearanceFinished = plateAppearanceFinished
+    }
 
     enum class SubmissionType(val description: String) {
         SWING("Swing"),
